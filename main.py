@@ -6,10 +6,30 @@ import json
 import os
 from flask import Flask
 from threading import Thread
+import shutil
 
 # Cargar configuración desde variables de entorno (Replit Secrets)
 TOKEN = os.environ.get('DISCORD_TOKEN')
 PREFIX = os.environ.get('PREFIX', '!')
+
+# Detectar FFmpeg (Replit usa Nix que lo instala en diferentes rutas)
+FFMPEG_PATH = shutil.which('ffmpeg')
+if not FFMPEG_PATH:
+    print("⚠️ FFmpeg no encontrado en PATH, intentando rutas comunes...")
+    possible_paths = [
+        '/nix/store/*/bin/ffmpeg',
+        '/usr/bin/ffmpeg',
+        '/usr/local/bin/ffmpeg'
+    ]
+    for path in possible_paths:
+        if os.path.exists(path):
+            FFMPEG_PATH = path
+            break
+
+if FFMPEG_PATH:
+    print(f"✅ FFmpeg encontrado en: {FFMPEG_PATH}")
+else:
+    print("❌ FFmpeg no encontrado")
 
 # Configuración de yt-dlp optimizada para fluidez y calidad
 ytdl_format_options = {
@@ -28,16 +48,11 @@ ytdl_format_options = {
     'age_limit': None,
     'cachedir': False,
     'http_chunk_size': 10485760,
-    'postprocessors': [{
-        'key': 'FFmpegExtractAudio',
-        'preferredcodec': 'best',
-        'preferredquality': '256',
-    }],
 }
 
 ffmpeg_options = {
-    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -thread_queue_size 2048',
-    'options': '-vn -b:a 256k -ar 48000 -ac 2 -bufsize 2048k -maxrate 256k -filter:a "volume=1.0,equalizer=f=100:width_type=o:width=2:g=2" -fflags +genpts+discardcorrupt'
+    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+    'options': '-vn -b:a 192k -bufsize 512k'
 }
 
 ytdl = yt_dlp.YoutubeDL(ytdl_format_options)
@@ -79,7 +94,12 @@ class YTDLSource(discord.PCMVolumeTransformer):
             data = data['entries'][0]
 
         filename = data['url'] if stream else ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
+        
+        # Usar FFmpeg con la ruta detectada si está disponible
+        if FFMPEG_PATH:
+            return cls(discord.FFmpegPCMAudio(filename, executable=FFMPEG_PATH, **ffmpeg_options), data=data)
+        else:
+            return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
 
     @staticmethod
     def format_duration(seconds):
