@@ -49,7 +49,8 @@ ytdl_format_options = {
 }
 
 ffmpeg_options = {
-    'options': '-vn'
+    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+    'options': '-vn -ar 48000 -ac 2'
 }
 
 ytdl = yt_dlp.YoutubeDL(ytdl_format_options)
@@ -109,10 +110,15 @@ class YTDLSource(discord.PCMVolumeTransformer):
                 audio_source = discord.FFmpegPCMAudio(
                     filename, 
                     executable=FFMPEG_PATH,
-                    **ffmpeg_options
+                    before_options=ffmpeg_options['before_options'],
+                    options=ffmpeg_options['options']
                 )
             else:
-                audio_source = discord.FFmpegPCMAudio(filename, **ffmpeg_options)
+                audio_source = discord.FFmpegPCMAudio(
+                    filename,
+                    before_options=ffmpeg_options['before_options'],
+                    options=ffmpeg_options['options']
+                )
             
             return cls(audio_source, data=data)
         except Exception as e:
