@@ -1,0 +1,37 @@
+# Node.js
+node_modules/
+package-lock.json
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+*.egg-info/
+
+# Configuración sensible
+config.json
+.env
+
+# FFmpeg
+ffmpeg.exe
+*.exe
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Archivos temporales
+*.tmp
+*.cache
+1764297664877-player-script.js
+1764297664885-player-script.js
