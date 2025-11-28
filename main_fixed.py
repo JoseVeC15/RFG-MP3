@@ -33,7 +33,7 @@ if FFMPEG_PATH:
 else:
     print("❌ ADVERTENCIA: FFmpeg no encontrado - el audio no funcionará")
 
-# Configuración de yt-dlp optimizada
+# Configuración de yt-dlp optimizada con bypass de detección
 ytdl_format_options = {
     'format': 'bestaudio/best',
     'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
@@ -46,6 +46,13 @@ ytdl_format_options = {
     'no_warnings': True,
     'default_search': 'ytsearch',
     'source_address': '0.0.0.0',
+    'extractor_args': {
+        'youtube': {
+            'player_client': ['android', 'web'],
+            'skip': ['hls', 'dash', 'translated_subs']
+        }
+    },
+    'cookiesfrombrowser': None,
 }
 
 ffmpeg_options = {
